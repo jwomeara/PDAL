@@ -46,8 +46,8 @@ else
     sudo apt-get install cmake
 fi
 
-if [[ $PDAL_OPTIONAL_COMPONENTS == "all" ]]
-then
+#if [[ $PDAL_OPTIONAL_COMPONENTS == "all" ]]
+#then
     sudo apt-get install libgdal1h libgdal-dev libhdf5-serial-dev
     sudo apt-get install \
         libproj-dev libgeos++-dev \
@@ -62,7 +62,7 @@ then
     cd libgeotiff-1.4.0
     ./configure --prefix=/usr && make && sudo make install
     cd $TRAVIS_BUILD_DIR
-fi
+#fi
 
 gcc --version
 clang --version
