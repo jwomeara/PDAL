@@ -101,12 +101,12 @@ void PgReader::processOptions(const Options& options)
 }
 
 
-void PgReader::ready()
+void PgReader::ready(PointContext ctx)
 {
     // Database connection
     m_session = pg_connect(m_connection);
 
-    if (m_spatialReference.empty())
+    if (getSpatialReference().empty())
         setSpatialReference(fetchSpatialReference());
 }
 
