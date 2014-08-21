@@ -1,5 +1,5 @@
 /******************************************************************************
-* Copyright (c) 2014, Howard Butler, hobu.inc@gmail.com
+* Copyright (c) 2011, Howard Butler, hobu.inc@gmail.com
 *
 * All rights reserved.
 *
@@ -34,20 +34,60 @@
 
 #pragma once
 
-#include <pdal/pdal_config.hpp>
+#include <pdal/Writer.hpp>
+#include <pdal/FileUtils.hpp>
+#include <pdal/StageFactory.hpp>
 
-#include <pdal/BufferReader.hpp>
-#include <faux/FauxReader.hpp>
+#include <vector>
+#include <string>
 
-#include <las/LasReader.hpp>
-#include <las/LasWriter.hpp>
+namespace pdal
+{
+namespace drivers
+{
+namespace geowave
+{
 
-#include <bpf/BpfReader.hpp>
-#include <bpf/BpfWriter.hpp>
+#ifdef USE_PDAL_PLUGIN_GEOWAVE
+PDAL_C_START
 
-#include <sbet/SbetReader.hpp>
-#include <sbet/SbetWriter.hpp>
+PDAL_DLL void PDALRegister_writer_geowave(void* factory);
 
-#include <qfit/QfitReader.hpp>
-#include <terrasolid/TerrasolidReader.hpp>
-#include <text/TextWriter.hpp>
+PDAL_C_END
+#endif
+
+class PDAL_DLL Writer : public pdal::Writer
+{
+public:
+    SET_STAGE_NAME("drivers.geowave.writer", "Geowave Writer")
+    SET_STAGE_LINK("http://pdal.io/stages/drivers.geowave.writer.html")
+    SET_STAGE_ENABLED(true)
+
+    Writer(const Options& options) : pdal::Writer(options)
+    {}
+
+    static Options getDefaultOptions();
+
+private:
+    virtual void processOptions(const Options&);
+    virtual void ready(PointContext ctx);
+    virtual void write(const PointBuffer& buf);
+    
+    int createJvm();
+
+	std::string m_zookeeperUrl;
+	std::string m_instanceName;
+	std::string m_username;
+	std::string m_password;
+	std::string m_tableNamespace;
+	Dimension::IdList m_dims;
+	std::vector<Dimension::Type::Enum> m_dimTypes;
+
+    Writer& operator=(const Writer&); // not implemented
+    Writer(const Writer&); // not implemented
+};
+
+} // namespace geowave
+} // namespace drivers
+} // namespace pdal
+

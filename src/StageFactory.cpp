@@ -303,9 +303,49 @@ void StageFactory::registerWriter(const std::string& type, WriterCreator* f)
 
 void StageFactory::registerKnownReaders()
 {
+<<<<<<< HEAD
     REGISTER_READER(FauxReader, pdal::FauxReader);
     REGISTER_READER(BufferReader, pdal::BufferReader);
     REGISTER_READER(LasReader, pdal::LasReader);
+=======
+    REGISTER_READER(FauxReader, pdal::drivers::faux::Reader);
+    REGISTER_READER(LasReader, pdal::drivers::las::Reader);
+#ifdef PDAL_HAVE_ORACLE
+#ifndef USE_PDAL_PLUGIN_OCI
+    REGISTER_READER(OciReader, pdal::drivers::oci::OciReader);
+#endif
+#endif
+#ifdef PDAL_HAVE_NITRO
+    REGISTER_READER(NITFReader, pdal::drivers::nitf::NitfReader);
+#endif
+
+#ifdef PDAL_HAVE_SQLITE
+#ifndef USE_PDAL_PLUGIN_SQLITE
+    REGISTER_READER(SqliteReader, pdal::drivers::sqlite::SQLiteReader);
+#endif
+#endif
+
+#ifdef PDAL_HAVE_PCL
+    REGISTER_READER(PcdReader, pdal::drivers::pcd::PcdReader);
+#endif
+
+#ifdef PDAL_HAVE_POSTGRESQL
+#ifndef USE_PDAL_PLUGIN_PGPOINTCLOUD
+    REGISTER_READER(PgPcReader, pdal::drivers::pgpointcloud::PgReader);
+#endif
+#endif
+
+    REGISTER_READER(QfitReader, pdal::drivers::qfit::Reader);
+    REGISTER_READER(TerrasolidReader, pdal::drivers::terrasolid::Reader);
+    REGISTER_READER(BpfReader, pdal::BpfReader);
+	REGISTER_READER(GeowaveReader, pdal::drivers::geowave::Reader);
+
+#ifdef PDAL_HAVE_GREYHOUND
+    REGISTER_READER(GreyhoundReader, pdal::drivers::greyhound::GreyhoundReader);
+#endif
+
+    REGISTER_READER(SbetReader, pdal::drivers::sbet::SbetReader);
+>>>>>>> 5af21a9... Initial bare bones geowave drivers
 
     REGISTER_READER(QfitReader, pdal::QfitReader);
     REGISTER_READER(TerrasolidReader, pdal::TerrasolidReader);
