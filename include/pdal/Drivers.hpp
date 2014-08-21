@@ -76,6 +76,8 @@
 #include <pdal/drivers/terrasolid/Reader.hpp>
 #include <pdal/drivers/text/Writer.hpp>
 
+#include <pdal/drivers/geowave/Writer.hpp>
+
 #ifdef PDAL_HAVE_ORACLE
 #ifndef USE_PDAL_PLUGIN_OCI
 #include <pdal/drivers/oci/Writer.hpp>
