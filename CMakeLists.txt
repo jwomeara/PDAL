@@ -539,6 +539,59 @@ if(WITH_LASZIP)
     endif()
 endif()
 
+# JNI support - optional, default=OFF
+option(WITH_JNI "Choose if JNI support should be built" FALSE)
+
+if(WITH_JNI)
+    find_package(JNI)
+    if(JNI_FOUND) 
+		set(CMAKE_REQUIRED_LIBRARIES "${JNI_LIBRARIES}")
+        include_directories(${JNI_INCLUDE_DIRS})
+        mark_as_advanced(CLEAR JNI_INCLUDE_DIRS)
+		mark_as_advanced(CLEAR JNI_LIBRARIES)
+		add_definitions(-DJAVA_EXECUTABLE_PATH=${Java_JAVA_EXECUTABLE})
+        set(PDAL_HAVE_JNI 1)
+    else()
+		set(JNI_LIBRARIES "")
+        set(WITH_JNI FALSE)
+    endif()
+endif()
+
+# JACE support - optional, default=OFF
+option(WITH_JACE "Choose if JACE support should be built" FALSE)
+
+if(WITH_JACE)
+    find_package(Jace)
+    if(JACE_FOUND)    
+        set(CMAKE_REQUIRED_LIBRARIES "${JACE_LIBRARY}")
+        include_directories(${JACE_INCLUDE_DIR})
+        mark_as_advanced(CLEAR JACE_INCLUDE_DIR)
+        mark_as_advanced(CLEAR JACE_LIBRARY)
+		mark_as_advanced(CLEAR JACE_RUNTIME_JAR)
+		add_definitions(-DJACE_RUNTIME_JAR=${JACE_RUNTIME_JAR})
+        set(PDAL_HAVE_JACE 1)
+    else()
+        set(JACE_LIBRARY "")
+		set(JACE_RUNTIME "")
+        set(WITH_JACE FALSE)
+    endif()
+endif()
+
+# GeoWave support - optional, default=OFF
+option(WITH_GeoWave "Choose if GeoWave support should be built" FALSE)
+
+if(WITH_GeoWave)
+    find_package(GeoWave)
+    if(GEOWAVE_FOUND)    
+		mark_as_advanced(CLEAR GeoWave_RUNTIME_JAR)
+		add_definitions(-DGEOWAVE_RUNTIME_JAR=${GeoWave_RUNTIME_JAR})
+        set(PDAL_HAVE_GeoWave 1)
+    else()
+		set(GeoWave_RUNTIME_JAR "")
+        set(WITH_GeoWave FALSE)
+    endif()
+endif()
+
 # ZLIB support - optional, default=ON
 option(WITH_ZLIB "Choose of ZLIB support should be built" TRUE)
 if(WITH_ZLIB)
@@ -703,7 +756,7 @@ option(USE_PDAL_PLUGIN_MRSID "Build the MrSID driver as a plugin rather than emb
 option(USE_PDAL_PLUGIN_CARIS "Build the Caris driver as a plugin rather than embedding" FALSE)
 option(USE_PDAL_PLUGIN_NITRO "Build the NITF writer as a plugin rather than embedding" FALSE)
 
-if (USE_PDAL_PLUGIN_TEXT OR USE_PDAL_PLUGIN_SOCI OR USE_PDAL_PLUGIN_OCI OR
+if (USE_PDAL_PLUGIN_TEXT OR USE_PDAL_PLUGIN_SOCI OR USE_PDAL_PLUGIN_OCI OR 
     USE_PDAL_PLUGIN_MRSID OR USE_PDAL_PLUGIN_CARIS OR USE_PDAL_PLUGIN_NITRO)
   if (PDAL_BUILD_STATIC)
     message(SEND_ERROR "Cannot build separate plugins with statically compiled PDAL")

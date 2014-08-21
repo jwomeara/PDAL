@@ -383,6 +383,24 @@ if (NOT USE_PDAL_PLUGIN_TEXT)
 endif()
 
 #
+# drivers/geowave
+#
+set(PDAL_GEOWAVE_PATH drivers/geowave)
+set(PDAL_GEOWAVE_HEADERS "${PDAL_HEADERS_DIR}/${PDAL_GEOWAVE_PATH}")
+set(PDAL_GEOWAVE_SRC "${PROJECT_SOURCE_DIR}/src/${PDAL_GEOWAVE_PATH}")
+
+set(PDAL_DRIVERS_GEOWAVE_HPP
+  "${PDAL_GEOWAVE_HEADERS}/Writer.hpp"
+)
+
+set (PDAL_DRIVERS_GEOWAVE_CPP
+  ${PDAL_GEOWAVE_SRC}/Writer.cpp
+)
+
+list (APPEND PDAL_CPP ${PDAL_DRIVERS_GEOWAVE_CPP} )
+list (APPEND PDAL_HPP ${PDAL_DRIVERS_GEOWAVE_HPP} )
+
+#
 # drivers/nitf
 #
 set(PDAL_NITF_PATH drivers/nitf)
@@ -724,6 +742,7 @@ source_group("Header Files\\drivers\\sbet" FILES ${PDAL_DRIVERS_SBET_HPP})
 source_group("Header Files\\drivers\\greyhound" FILES ${PDAL_DRIVERS_GREYHOUND_HPP})
 source_group("Header Files\\drivers\\terrasolid" FILES ${PDAL_DRIVERS_TERRASOLID_HPP})
 source_group("Header Files\\drivers\\text" FILES ${PDAL_DRIVERS_TEXT_HPP})
+source_group("Header Files\\drivers\\geowave" FILES ${PDAL_DRIVERS_GEOWAVE_HPP})
 source_group("Header Files\\drivers\\pgpointcloud" FILES ${PDAL_DRIVERS_PGPOINTCLOUD_HPP})
 source_group("Header Files\\filters" FILES ${PDAL_FILTERS_HPP})
 source_group("Header Files\\plang" FILES ${PDAL_PLANG_HPP})
@@ -740,6 +759,7 @@ source_group("Source Files\\drivers\\sbet" FILES ${PDAL_DRIVERS_SBET_CPP})
 source_group("Source Files\\drivers\\greyhound" FILES ${PDAL_DRIVERS_GREYHOUND_CPP})
 source_group("Source Files\\drivers\\terrasolid" FILES ${PDAL_DRIVERS_TERRASOLID_CPP})
 source_group("Source Files\\drivers\\text" FILES ${PDAL_DRIVERS_TEXT_CPP})
+source_group("Source Files\\drivers\\geowave" FILES ${PDAL_DRIVERS_GEOWAVE_CPP})
 source_group("Source Files\\drivers\\pgpointcloud" FILES ${PDAL_DRIVERS_PGPOINTCLOUD_CPP})
 source_group("Source Files\\filters" FILES ${PDAL_FILTERS_CPP})
 source_group("Source Files\\plang" FILES ${PDAL_PLANG_CPP})

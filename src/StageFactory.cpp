@@ -141,6 +141,8 @@ MAKE_WRITER_CREATOR(LasWriter, pdal::drivers::las::Writer)
 MAKE_WRITER_CREATOR(TextWriter, pdal::drivers::text::Writer)
 #endif
 
+MAKE_WRITER_CREATOR(GeowaveWriter, pdal::drivers::geowave::Writer)
+
 #ifdef PDAL_HAVE_ORACLE
 #ifndef USE_PDAL_PLUGIN_OCI
 MAKE_WRITER_CREATOR(OciWriter, pdal::drivers::oci::Writer)
@@ -429,6 +431,8 @@ void StageFactory::registerKnownWriters()
 #ifndef USE_PDAL_PLUGIN_TEXT
     REGISTER_WRITER(TextWriter, pdal::drivers::text::Writer);
 #endif
+
+    REGISTER_WRITER(GeowaveWriter, pdal::drivers::geowave::Writer);
 
 #ifdef PDAL_HAVE_ORACLE
 #ifndef USE_PDAL_PLUGIN_OCI
