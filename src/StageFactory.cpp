@@ -62,6 +62,7 @@ namespace pdal
 MAKE_READER_CREATOR(FauxReader, pdal::drivers::faux::Reader)
 MAKE_READER_CREATOR(LasReader, pdal::drivers::las::Reader)
 MAKE_READER_CREATOR(BpfReader, pdal::BpfReader)
+MAKE_READER_CREATOR(GeowaveReader, pdal::drivers::geowave::Reader)
 
 #ifdef PDAL_HAVE_GREYHOUND
 MAKE_READER_CREATOR(GreyhoundReader, pdal::drivers::greyhound::GreyhoundReader)
@@ -144,6 +145,8 @@ MAKE_WRITER_CREATOR(LasWriter, pdal::drivers::las::Writer)
 #ifndef USE_PDAL_PLUGIN_TEXT
 MAKE_WRITER_CREATOR(TextWriter, pdal::drivers::text::Writer)
 #endif
+
+MAKE_WRITER_CREATOR(GeowaveWriter, pdal::drivers::geowave::Writer)
 
 #ifdef PDAL_HAVE_ORACLE
 #ifndef USE_PDAL_PLUGIN_OCI
@@ -399,6 +402,7 @@ void StageFactory::registerKnownReaders()
     REGISTER_READER(QfitReader, pdal::drivers::qfit::Reader);
     REGISTER_READER(TerrasolidReader, pdal::drivers::terrasolid::Reader);
     REGISTER_READER(BpfReader, pdal::BpfReader);
+	REGISTER_READER(GeowaveReader, pdal::drivers::geowave::Reader);
 
 #ifdef PDAL_HAVE_GREYHOUND
     REGISTER_READER(GreyhoundReader, pdal::drivers::greyhound::GreyhoundReader);
@@ -450,6 +454,8 @@ void StageFactory::registerKnownWriters()
 #ifndef USE_PDAL_PLUGIN_TEXT
     REGISTER_WRITER(TextWriter, pdal::drivers::text::Writer);
 #endif
+
+    REGISTER_WRITER(GeowaveWriter, pdal::drivers::geowave::Writer);
 
 #ifdef PDAL_HAVE_ORACLE
 #ifndef USE_PDAL_PLUGIN_OCI
