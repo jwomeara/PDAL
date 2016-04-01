@@ -33,6 +33,7 @@
 ****************************************************************************/
 
 #include "GeoWaveWriter.hpp"
+#include <pdal/pdal_macros.hpp>
 
 #include <pdal/util/Algorithm.hpp>
 
@@ -98,8 +99,6 @@ using jace::proxy::org::geotools::data::DataUtilities;
 using jace::proxy::org::geotools::feature::simple::SimpleFeatureBuilder;
 #include "jace/proxy/org/geotools/feature/simple/SimpleFeatureTypeBuilder.h"
 using jace::proxy::org::geotools::feature::simple::SimpleFeatureTypeBuilder;
-#include "jace/proxy/org/geotools/feature/DefaultFeatureCollection.h"
-using jace::proxy::org::geotools::feature::DefaultFeatureCollection;
 #include "jace/proxy/org/geotools/geometry/jts/JTSFactoryFinder.h"
 using jace::proxy::org::geotools::geometry::jts::JTSFactoryFinder;
 
@@ -119,14 +118,20 @@ using jace::proxy::org::opengis::feature::type::AttributeDescriptor;
 using jace::proxy::mil::nga::giat::geowave::core::index::ByteArrayId;
 #include "jace/proxy/mil/nga/giat/geowave/adapter/vector/FeatureDataAdapter.h"
 using jace::proxy::mil::nga::giat::geowave::adapter::vector::FeatureDataAdapter;
-#include "jace/proxy/mil/nga/giat/geowave/adapter/vector/FeatureCollectionDataAdapter.h"
-using jace::proxy::mil::nga::giat::geowave::adapter::vector::FeatureCollectionDataAdapter;
 #include "jace/proxy/mil/nga/giat/geowave/core/store/adapter/WritableDataAdapter.h"
 using jace::proxy::mil::nga::giat::geowave::core::store::adapter::WritableDataAdapter;
+#include "jace/proxy/mil/nga/giat/geowave/core/store/data/visibility/UnconstrainedVisibilityHandler.h"
+using jace::proxy::mil::nga::giat::geowave::core::store::data::visibility::UnconstrainedVisibilityHandler;
+#include "jace/proxy/mil/nga/giat/geowave/core/store/data/visibility/UniformVisibilityWriter.h"
+using jace::proxy::mil::nga::giat::geowave::core::store::data::visibility::UniformVisibilityWriter;
+#include "jace/proxy/mil/nga/giat/geowave/core/store/IndexWriter.h"
+using jace::proxy::mil::nga::giat::geowave::core::store::IndexWriter;
 #include "jace/proxy/mil/nga/giat/geowave/core/store/index/Index.h"
 using jace::proxy::mil::nga::giat::geowave::core::store::index::Index;
-#include "jace/proxy/mil/nga/giat/geowave/core/geotime/IndexType_JaceIndexType.h"
-using jace::proxy::mil::nga::giat::geowave::core::geotime::IndexType_JaceIndexType;
+#include "jace/proxy/mil/nga/giat/geowave/core/store/index/PrimaryIndex.h"
+using jace::proxy::mil::nga::giat::geowave::core::store::index::PrimaryIndex;
+#include "jace/proxy/mil/nga/giat/geowave/core/geotime/ingest/SpatialDimensionalityTypeProvider.h"
+using jace::proxy::mil::nga::giat::geowave::core::geotime::ingest::SpatialDimensionalityTypeProvider;
 #include "jace/proxy/mil/nga/giat/geowave/datastore/accumulo/BasicAccumuloOperations.h"
 using jace::proxy::mil::nga::giat::geowave::datastore::accumulo::BasicAccumuloOperations;
 #include "jace/proxy/mil/nga/giat/geowave/datastore/accumulo/AccumuloDataStore.h"
@@ -134,21 +139,21 @@ using jace::proxy::mil::nga::giat::geowave::datastore::accumulo::AccumuloDataSto
 #include "jace/proxy/mil/nga/giat/geowave/datastore/accumulo/AccumuloIndexWriter.h"
 using jace::proxy::mil::nga::giat::geowave::datastore::accumulo::AccumuloIndexWriter;
 
-static PluginInfo const s_info = PluginInfo(
-    "writers.geowave",
-    "Write data using GeoWave.",
-    "http://pdal.io/stages/drivers.geowave.writer.html" );
-
-CREATE_SHARED_PLUGIN(1, 0, GeoWaveWriter, Writer, s_info)
-
-std::string pdal::GeoWaveWriter::getName() const { return s_info.name; }
-
-
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-
 namespace pdal
 {
+
+    static PluginInfo const s_info = PluginInfo(
+        "writers.geowave",
+        "Write data using GeoWave.",
+        "http://pdal.io/stages/drivers.geowave.writer.html" );
+
+    CREATE_SHARED_PLUGIN(1, 0, GeoWaveWriter, Writer, s_info)
+
+    std::string pdal::GeoWaveWriter::getName() const { return s_info.name; }
+
+
+    #define STRINGIFY(x) #x
+    #define TOSTRING(x) STRINGIFY(x)
 
     Options GeoWaveWriter::getDefaultOptions()
     {
@@ -160,8 +165,6 @@ namespace pdal
         Option password("password", "", "The password for the account to establish an Accumulo connector.");
         Option tableNamespace("table_namespace", "", "The table name to be used when interacting with GeoWave.");
         Option featureTypeName("feature_type_name", "PDAL_Point", "The feature type name to be used when interacting with GeoWave.");
-        Option dataAdapter("data_adapter", "FeatureDataAdapter", "FeatureCollectionDataAdapter stores multiple points per Accumulo entry.  FeatureDataAdapter stores a single point per Accumulo entry.");
-        Option pointsPerEntry("points_per_entry", 5000u, "Sets the maximum number of points per Accumulo entry when using FeatureCollectionDataAdapter.");
 
         options.add(zookeeperUrl);
         options.add(instanceName);
@@ -169,8 +172,6 @@ namespace pdal
         options.add(password);
         options.add(tableNamespace);
         options.add(featureTypeName);
-        options.add(dataAdapter);
-        options.add(pointsPerEntry);
 
         return options;
     }
@@ -183,8 +184,6 @@ namespace pdal
         m_password = ops.getValueOrThrow<std::string>("password");
         m_tableNamespace = ops.getValueOrThrow<std::string>("table_namespace");
         m_featureTypeName = ops.getValueOrDefault<std::string>("feature_type_name", "PDAL_Point");
-        m_useFeatCollDataAdapter = !(ops.getValueOrDefault<std::string>("data_adapter", "FeatureCollectionDataAdapter").compare("FeatureDataAdapter") == 0);
-        m_pointsPerEntry = ops.getValueOrDefault<uint32_t>("points_per_entry", 5000u);
     }
 
     void GeoWaveWriter::initialize()
@@ -204,7 +203,7 @@ namespace pdal
         // get a list of all the dimensions & their types
         Dimension::IdList all = table.layout()->dims();
         for (auto di = all.begin(); di != all.end(); ++di)
-            if (!contains(m_dims, *di))
+            if (!Utils::contains(m_dims, *di))
                 m_dims.push_back(*di);
     }
 
@@ -239,13 +238,6 @@ namespace pdal
         AccumuloDataStore accumuloDataStore = java_new<AccumuloDataStore>(
             accumuloOperations);
 
-        Index index = IndexType_JaceIndexType::createSpatialVectorIndex();
-
-        AccumuloIndexWriter accumuloIndexWriter = java_new<AccumuloIndexWriter>(
-            index,
-            accumuloOperations,
-            accumuloDataStore);
-
         // treat all types as double
         os << "location:Point:srid=4326";
         for (auto di = m_dims.begin(); di != m_dims.end(); ++di)
@@ -255,23 +247,19 @@ namespace pdal
             java_new<String>(m_featureTypeName),
             java_new<String>(os.str()));
 
+        WritableDataAdapter dataAdapter = java_new<FeatureDataAdapter>(TYPE);
+
+        JArray<PrimaryIndex> indexArray(1);
+        indexArray[0] = java_new<SpatialDimensionalityTypeProvider>().createPrimaryIndex();
+
+        IndexWriter indexWriter = accumuloDataStore.createWriter(
+            dataAdapter,
+            indexArray);
+
         String location = java_new<String>("location");
-
-        WritableDataAdapter dataAdapter;
-        if (m_useFeatCollDataAdapter)
-            dataAdapter = java_new<FeatureCollectionDataAdapter>(
-            TYPE,
-            m_pointsPerEntry);
-        else
-            dataAdapter = java_new<FeatureDataAdapter>(TYPE);
-
 
         GeometryFactory geometryFactory = JTSFactoryFinder::getGeometryFactory();
         SimpleFeatureBuilder builder = java_new<SimpleFeatureBuilder>(TYPE);
-
-        DefaultFeatureCollection featureCollection = java_new<DefaultFeatureCollection>(
-            UUID::randomUUID().toString(),
-            TYPE);
 
         for (PointId idx = 0; idx < view->size(); ++idx)
         {
@@ -291,20 +279,11 @@ namespace pdal
 
             SimpleFeature feature = builder.buildFeature(UUID::randomUUID().toString());
 
-            if (m_useFeatCollDataAdapter)
-                featureCollection.add(feature);
-            else
-                accumuloIndexWriter.write(
-                dataAdapter,
+            indexWriter.write(
                 feature);
         }
 
-        if (m_useFeatCollDataAdapter)
-            accumuloIndexWriter.write(
-            dataAdapter,
-            featureCollection);
-
-        accumuloIndexWriter.close();
+        indexWriter.close();
     }
 
     int GeoWaveWriter::createJvm()

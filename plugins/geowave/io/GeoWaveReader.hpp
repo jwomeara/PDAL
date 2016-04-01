@@ -77,8 +77,6 @@ namespace pdal
         std::string m_password;
         std::string m_tableNamespace;
         std::string m_featureTypeName;
-        bool m_useFeatCollDataAdapter;
-        uint32_t m_pointsPerEntry;
 
         BOX3D m_bounds;
 

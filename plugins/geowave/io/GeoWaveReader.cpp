@@ -75,15 +75,12 @@ using jace::proxy::types::JInt;
 
 #include "jace/proxy/java/lang/Double.h"
 using jace::proxy::java::lang::Double;
+#include "jace/proxy/java/lang/Integer.h"
+using jace::proxy::java::lang::Integer;
 #include "jace/proxy/java/lang/String.h"
 using jace::proxy::java::lang::String;
 #include "jace/proxy/java/util/List.h"
 using jace::proxy::java::util::List;
-
-#include "jace/proxy/org/geotools/data/simple/SimpleFeatureCollection.h"
-using jace::proxy::org::geotools::data::simple::SimpleFeatureCollection;
-#include "jace/proxy/org/geotools/data/simple/SimpleFeatureIterator.h"
-using jace::proxy::org::geotools::data::simple::SimpleFeatureIterator;
 
 #include "jace/proxy/com/vividsolutions/jts/geom/Polygon.h"
 using jace::proxy::com::vividsolutions::jts::geom::Polygon;
@@ -110,14 +107,16 @@ using jace::proxy::org::opengis::feature::type::AttributeDescriptor;
 using jace::proxy::mil::nga::giat::geowave::core::index::ByteArrayId;
 #include "jace/proxy/mil/nga/giat/geowave/adapter/vector/FeatureDataAdapter.h"
 using jace::proxy::mil::nga::giat::geowave::adapter::vector::FeatureDataAdapter;
-#include "jace/proxy/mil/nga/giat/geowave/adapter/vector/FeatureCollectionDataAdapter.h"
-using jace::proxy::mil::nga::giat::geowave::adapter::vector::FeatureCollectionDataAdapter;
 #include "jace/proxy/mil/nga/giat/geowave/core/store/index/Index.h"
 using jace::proxy::mil::nga::giat::geowave::core::store::index::Index;
-#include "jace/proxy/mil/nga/giat/geowave/core/geotime/IndexType_JaceIndexType.h"
-using jace::proxy::mil::nga::giat::geowave::core::geotime::IndexType_JaceIndexType;
+#include "jace/proxy/mil/nga/giat/geowave/core/store/index/PrimaryIndex.h"
+using jace::proxy::mil::nga::giat::geowave::core::store::index::PrimaryIndex;
+#include "jace/proxy/mil/nga/giat/geowave/core/geotime/ingest/SpatialDimensionalityTypeProvider.h"
+using jace::proxy::mil::nga::giat::geowave::core::geotime::ingest::SpatialDimensionalityTypeProvider;
 #include "jace/proxy/mil/nga/giat/geowave/core/store/query/Query.h"
 using jace::proxy::mil::nga::giat::geowave::core::store::query::Query;
+#include "jace/proxy/mil/nga/giat/geowave/core/store/query/QueryOptions.h"
+using jace::proxy::mil::nga::giat::geowave::core::store::query::QueryOptions;
 #include "jace/proxy/mil/nga/giat/geowave/core/geotime/store/query/SpatialQuery.h"
 using jace::proxy::mil::nga::giat::geowave::core::geotime::store::query::SpatialQuery;
 
@@ -128,21 +127,21 @@ using jace::proxy::mil::nga::giat::geowave::datastore::accumulo::AccumuloDataSto
 #include "jace/proxy/mil/nga/giat/geowave/datastore/accumulo/metadata/AccumuloAdapterStore.h"
 using jace::proxy::mil::nga::giat::geowave::datastore::accumulo::metadata::AccumuloAdapterStore;
 
-static PluginInfo const s_info = PluginInfo(
-    "readers.geowave",
-    "\"GeoWave\"  reader support. ",
-    "http://pdal.io/stages/drivers.geowave.reader.html" );
-
-CREATE_SHARED_PLUGIN(1, 0, GeoWaveReader, Reader, s_info)
-
-std::string pdal::GeoWaveReader::getName() const { return s_info.name; }
-
-
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-
 namespace pdal
 {
+
+    static PluginInfo const s_info = PluginInfo(
+        "readers.geowave",
+        "\"GeoWave\"  reader support. ",
+        "http://pdal.io/stages/drivers.geowave.reader.html" );
+
+    CREATE_SHARED_PLUGIN(1, 0, GeoWaveReader, Reader, s_info)
+
+    std::string pdal::GeoWaveReader::getName() const { return s_info.name; }
+
+
+    #define STRINGIFY(x) #x
+    #define TOSTRING(x) STRINGIFY(x)
 
     Options GeoWaveReader::getDefaultOptions()
     {
@@ -154,8 +153,6 @@ namespace pdal
         Option password("password", "", "The password for the account to establish an Accumulo connector");
         Option tableNamespace("table_namespace", "", "The table name to be used when interacting with GeoWave");
         Option featureTypeName("feature_type_name", "", "The feature type name to be used when interacting with GeoWave");
-        Option dataAdapter("data_adapter", "FeatureDataAdapter", "FeatureCollectionDataAdapter stores multiple points per Accumulo entry.  FeatureDataAdapter stores a single point per Accumulo entry.");
-        Option pointsPerEntry("points_per_entry", 5000u, "Sets the maximum number of points per Accumulo entry when using FeatureCollectionDataAdapter.");
         Option bounds("bounds", "", "The extent of the bounding rectangle to use to query points, expressed as a string, eg: ([xmin, xmax], [ymin, ymax], [zmin, zmax])");
 
         options.add(zookeeperUrl);
@@ -164,8 +161,6 @@ namespace pdal
         options.add(password);
         options.add(tableNamespace);
         options.add(featureTypeName);
-        options.add(dataAdapter);
-        options.add(pointsPerEntry);
         options.add(bounds);
 
         return options;
@@ -191,8 +186,6 @@ namespace pdal
         m_password = ops.getValueOrThrow<std::string>("password");
         m_tableNamespace = ops.getValueOrThrow<std::string>("table_namespace");
         m_featureTypeName =  ops.getValueOrDefault<std::string>("feature_type_name", "PDAL_Point");
-        m_useFeatCollDataAdapter = !(ops.getValueOrDefault<std::string>("data_adapter", "FeatureCollectionDataAdapter").compare("FeatureDataAdapter") == 0);
-        m_pointsPerEntry = ops.getValueOrDefault<uint32_t>("points_per_Entry", 5000u);
         m_bounds = ops.getValueOrDefault<BOX3D>("bounds", BOX3D());
     }
 
@@ -223,11 +216,7 @@ namespace pdal
 
         AccumuloAdapterStore accumuloAdapterStore = java_new<AccumuloAdapterStore>(accumuloOperations);
 
-        List attribs;
-        if (m_useFeatCollDataAdapter)
-            attribs = java_cast<FeatureCollectionDataAdapter>(accumuloAdapterStore.getAdapter(java_new<ByteArrayId>(std::to_string(m_pointsPerEntry) + m_featureTypeName))).getType().getAttributeDescriptors();
-        else
-            attribs = java_cast<FeatureDataAdapter>(accumuloAdapterStore.getAdapter(java_new<ByteArrayId>(m_featureTypeName))).getType().getAttributeDescriptors();
+        List attribs = java_cast<FeatureDataAdapter>(accumuloAdapterStore.getAdapter(java_new<ByteArrayId>(m_featureTypeName))).getType().getAttributeDescriptors();
 
         for (int i = 0; i < attribs.size(); ++i){
             std::string name = java_cast<AttributeDescriptor>(attribs.get(i)).getLocalName();
@@ -273,7 +262,7 @@ namespace pdal
         AccumuloDataStore accumuloDataStore = java_new<AccumuloDataStore>(
             accumuloOperations);
 
-        Index index = IndexType_JaceIndexType::createSpatialVectorIndex();
+        PrimaryIndex index = java_new<SpatialDimensionalityTypeProvider>().createPrimaryIndex();
 
         GeometryFactory factory = java_new<GeometryFactory>();
 
@@ -292,8 +281,10 @@ namespace pdal
         Polygon geom = factory.createPolygon(coordArray);
         Query query = java_new<SpatialQuery>(geom);
 
-        JInt count = m_count;
-        m_iterator = accumuloDataStore.query(index, query, count);
+        QueryOptions queryOptions = java_new<QueryOptions>(index);
+        queryOptions.setLimit(java_new<Integer>(m_count));
+
+        m_iterator = accumuloDataStore.query(queryOptions, query);
     }
 
     point_count_t GeoWaveReader::read(PointViewPtr view, point_count_t count)
@@ -303,51 +294,60 @@ namespace pdal
         String location = java_new<String>("location");
         point_count_t numRead = 0;
 
-        if (m_useFeatCollDataAdapter)
-        {
-            while (m_iterator.hasNext() && count > 0)
-            {
-                SimpleFeatureCollection featureCollection = java_cast<SimpleFeatureCollection>(m_iterator.next());
-                SimpleFeatureIterator featItr = featureCollection.features();
+        while (m_iterator.hasNext() && count-- > 0){
+            SimpleFeature simpleFeature = java_cast<SimpleFeature>(m_iterator.next());
+            List attribs = simpleFeature.getType().getAttributeDescriptors();
 
-                while (featItr.hasNext() && count-- > 0)
-                {
-                    SimpleFeature simpleFeature = java_cast<SimpleFeature>(featItr.next());
-                    List attribs = simpleFeature.getType().getAttributeDescriptors();
+            for (int i = 0; i < attribs.size(); ++i){
+                String name = java_cast<AttributeDescriptor>(attribs.get(i)).getLocalName();
 
-                    for (int i = 0; i < attribs.size(); ++i){
-                        String name = java_cast<AttributeDescriptor>(attribs.get(i)).getLocalName();
+                if (!name.equals(location)){
+                    double value = java_cast<Double>(simpleFeature.getAttribute(name)).doubleValue();
 
-                        if (!name.equals(location))
-                            view->setField(id(name), numRead, java_cast<Double>(simpleFeature.getAttribute(name)).doubleValue());
+                    switch (defaultType(id(name)))
+                    {
+                        case Type::Float:
+                            view->setField(id(name), numRead, (float)value);
+                            break;
+                        case Type::Double:
+                            view->setField(id(name), numRead, (double)value);
+                            break;
+                        case Type::Signed8:
+                            view->setField(id(name), numRead, (int8_t)value);
+                            break;
+                        case Type::Signed16:
+                            view->setField(id(name), numRead, (int16_t)value);
+                            break;
+                        case Type::Signed32:
+                            view->setField(id(name), numRead, (int32_t)value);
+                            break;
+                        case Type::Signed64:
+                            view->setField(id(name), numRead, (int64_t)value);
+                            break;
+                        case Type::Unsigned8:
+                            view->setField(id(name), numRead, (uint8_t)value);
+                            break;
+                        case Type::Unsigned16:
+                            view->setField(id(name), numRead, (uint16_t)value);
+                            break;
+                        case Type::Unsigned32:
+                            view->setField(id(name), numRead, (uint32_t)value);
+                            break;
+                        case Type::Unsigned64:
+                            view->setField(id(name), numRead, (uint64_t)value);
+                            break;
+                        case Type::None:
+                        default:
+                            log()->get(LogLevel::Error) << "Encountered an invalid type: " << defaultType(id(name));
+                            break;
                     }
-
-                    if (m_cb)
-                        m_cb(*view, numRead);
-
-                    ++numRead;
                 }
-                featItr.close();
             }
-        }
-        else
-        {
-            while (m_iterator.hasNext() && count-- > 0){
-                SimpleFeature simpleFeature = java_cast<SimpleFeature>(m_iterator.next());
-                List attribs = simpleFeature.getType().getAttributeDescriptors();
 
-                for (int i = 0; i < attribs.size(); ++i){
-                    String name = java_cast<AttributeDescriptor>(attribs.get(i)).getLocalName();
+            if (m_cb)
+                m_cb(*view, numRead);
 
-                    if (!name.equals(location))
-                        view->setField(id(name), numRead, java_cast<Double>(simpleFeature.getAttribute(name)).doubleValue());
-                }
-
-                if (m_cb)
-                    m_cb(*view, numRead);
-
-                ++numRead;
-            }
+            ++numRead;
         }
 
         return numRead;

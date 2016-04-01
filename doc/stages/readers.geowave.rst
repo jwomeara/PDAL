@@ -24,10 +24,7 @@ Example
           "password":"pass",
           "table_namespace":"PDAL_Table",
           "feature_type_name":"PDAL_Point",
-          "data_adapter":"FeatureCollectionDataAdapter",
-          "points_per_entry":"5000u",
           "bounds":"([0,1000000],[0,1000000],[0,100])",
-          "filename":"./pdal/test/data/autzen/autzen.jpg"
         },
         {
           "type":"writers.text",
@@ -45,7 +42,7 @@ zookeeper_url
   The comma-delimited URLs for all zookeeper servers, this will be directly used to instantiate a ZookeeperInstance. [Required]
 
 instance_name
-  the zookeeper instance name, this will be directly used to instantiate a ZookeeperInstance. [Required]
+  The zookeeper instance name, this will be directly used to instantiate a ZookeeperInstance. [Required]
 
 username
   The username for the account to establish an Accumulo connector. [Required]
@@ -58,12 +55,6 @@ table_namespace
 
 feature_type_name
   The feature type name to be used when ineracting GeoWave. [Default: PDAL_Point]
-
-data_adapter
-  FeatureCollectionDataAdapter stores multiple points per Accumulo entry. FeatureDataAdapter stores a single point per Accumulo entry. [Default: FeatureCollectionDataAdapter]
-
-points_per_entry
-  Sets the maximum number of points per Accumulo entry when using FeatureCollectionDataAdapter. [Default: 5000u]
 
 bounds
   The extent of the bounding rectangle to use to query points, expressed as a string, eg: “([xmin,xmax],[ymin,ymax],[zmin,zmax])”. [Default: unit cube]

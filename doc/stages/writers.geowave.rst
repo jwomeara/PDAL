@@ -32,8 +32,6 @@ Example
           "password":"pass",
           "table_namespace":"PDAL_Table",
           "feature_type_name":"PDAL_Point",
-          "data_adapter":"FeatureCollectionDataAdapter",
-          "points_per_entry":"5000u"
         }
       ]
     }
@@ -58,12 +56,6 @@ table_namespace
 
 feature_type_name
   The feature type name to be used when ineracting GeoWave. [Default: PDAL_Point]
-
-data_adapter
-  FeatureCollectionDataAdapter stores multiple points per Accumulo entry. FeatureDataAdapter stores a single point per Accumulo entry. [Default: FeatureCollectionDataAdapter]
-
-points_per_entry
-  Sets the maximum number of points per Accumulo entry when using FeatureCollectionDataAdapter. [Default: 5000u]
 
 
 .. _GeoWave: https://ngageoint.github.io/geowave/

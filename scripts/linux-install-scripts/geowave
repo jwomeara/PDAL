@@ -1,13 +1,17 @@
 #!/bin/sh
 SERVICE_NAME=geowave
 PATH_TO_JAR=/home/vagrant/geowave/geowave-jace.jar
-CLASS_TO_RUN=mil.nga.giat.geowave.datastore.accumulo.app.GeoWaveDemoApp
+GEOWAVE_EXAMPLE_JAR=/home/vagrant/geowave-jace/bin/geowave-example.jar
+GEOWAVE_FORMAT_VECTOR_JAR=/home/vagrant/geowave-jace/bin/geowave-format-vector.jar
+GEOWAVE_RUNTIME_JAR=/home/vagrant/geowave-jace/bin/geowave-runtime.jar
+GEOWAVE_TOOLS_JAR=/home/vagrant/geowave-jace/bin/geowave-tools.jar
+GEOWAVE_DEMO_APP=mil.nga.giat.geowave.examples.accumulo.app.GeoWaveDemoApp
 PID_PATH_NAME=/tmp/geowave-pid
 case $1 in
     start)
         echo "Starting $SERVICE_NAME ..."
         if [ ! -f $PID_PATH_NAME ]; then
-            nohup java -Dinteractive=false -cp $PATH_TO_JAR $CLASS_TO_RUN /tmp 2>> /dev/null >> /dev/null &
+            nohup java -Dinteractive=false -cp $GEOWAVE_EXAMPLE_JAR:$GEOWAVE_FORMAT_VECTOR_JAR:$GEOWAVE_RUNTIME_JAR:$GEOWAVE_TOOLS_JAR $GEOWAVE_DEMO_APP /tmp 2>> /dev/null >> /dev/null &
                         echo $! > $PID_PATH_NAME
             echo "$SERVICE_NAME started ..."
         else
@@ -33,7 +37,7 @@ case $1 in
             echo "$SERVICE_NAME stopped ...";
             rm $PID_PATH_NAME
             echo "$SERVICE_NAME starting ..."
-            nohup java -Dinteractive=false -cp $PATH_TO_JAR $CLASS_TO_RUN /tmp 2>> /dev/null >> /dev/null &
+            nohup java -Dinteractive=false -cp $GEOWAVE_EXAMPLE_JAR:$GEOWAVE_FORMAT_VECTOR_JAR:$GEOWAVE_RUNTIME_JAR:$GEOWAVE_TOOLS_JAR $GEOWAVE_DEMO_APP /tmp 2>> /dev/null >> /dev/null &
                         echo $! > $PID_PATH_NAME
             echo "$SERVICE_NAME started ..."
         else

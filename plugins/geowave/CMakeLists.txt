@@ -3,12 +3,11 @@
 #
 
 include(${PDAL_CMAKE_DIR}/jni.cmake)
-include(${PDAL_CMAKE_DIR}/jace.cmake)
 include(${PDAL_CMAKE_DIR}/geowave.cmake)
 
 set(GEOWAVE_LIBRARIES "")
 set(GEOWAVE_LIBRARIES ${GEOWAVE_LIBRARIES} ${Boost_LIBRARIES})
-set(GEOWAVE_LIBRARIES ${GEOWAVE_LIBRARIES} ${JACE_LIBRARY})
+set(GEOWAVE_LIBRARIES ${GEOWAVE_LIBRARIES} ${GEOWAVE_LIBRARY})
 set(GEOWAVE_LIBRARIES ${GEOWAVE_LIBRARIES} ${JAVA_JVM_LIBRARY})
 
 set(objs "")
@@ -43,3 +42,11 @@ PDAL_ADD_PLUGIN(writer_libname writer geowave
     FILES "${srcs}" "${incs}" 
     LINK_WITH ${GEOWAVE_LIBRARIES})
 
+#
+# GeoWave tests
+#
+if(BUILD_GEOWAVE_TESTS)
+	PDAL_ADD_TEST(geowavetest
+        FILES test/GeoWaveTest.cpp
+        LINK_WITH ${reader_libname} ${writer_libname})
+endif()

@@ -187,7 +187,9 @@ cmake_dependent_option(BUILD_PGPOINTCLOUD_TESTS "Choose if PostgreSQL PointCloud
 cmake_dependent_option(BUILD_SQLITE_TESTS "Choose if SQLite tests should be built" ON "BUILD_PLUGIN_SQLITE; WITH_TESTS" OFF)
 cmake_dependent_option(BUILD_OCI_TESTS "Choose if OCI tests should be built" ON "BUILD_PLUGIN_OCI; WITH_TESTS" OFF)
 cmake_dependent_option(BUILD_RIVLIB_TESTS "Choose if RiVLib tests should be built" ON "BUILD_PLUGIN_RIVLIB; WITH_TESTS" OFF)
+cmake_dependent_option(BUILD_GEOWAVE_TESTS "Choose if GeoWave tests should be built" ON "BUILD_PLUGIN_GEOWAVE; WITH_TESTS" OFF)
 cmake_dependent_option(BUILD_PIPELINE_TESTS "Choose if pipeline tests should be built" OFF "WITH_APPS; WITH_TESTS" OFF)
+
 
 if(BUILD_PLUGIN_PGPOINTCLOUD OR BUILD_PLUGIN_OCI OR BUILD_PLUGIN_SQLITE)
     include(${PDAL_CMAKE_DIR}/libxml2.cmake)

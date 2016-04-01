@@ -8,10 +8,10 @@ fi
 export NUMTHREADS
 
 # Installs GeoWave library
-mkdir geowave
-cd geowave
-wget http://s3.amazonaws.com/geowave-rpms/release/TARBALL/geowave-0.8.8.1-24f1a85-jace-source.tar.gz
-tar -xzf geowave-*-jace-source.tar.gz
+# TODO: update this
+wget http://s3.amazonaws.com/geowave-rpms/dev/TARBALL/geowave-0.9.1-SNAPSHOT-ccd2521-jace.tar.gz
+tar -xzf geowave-*-jace.tar.gz
+cd geowave-jace
 mkdir build
 cd build
 cmake -G "Unix Makefiles" \
@@ -22,9 +22,9 @@ cmake -G "Unix Makefiles" \
 make -j $NUMTHREADS
 
 # Configure library paths
-chmod 777 /home/vagrant/geowave/build/libjace.so
-sudo ln -s /home/vagrant/geowave/build/libjace.so /usr/lib/libjace.so
-echo "/usr/lib/jvm/java-7-oracle/jre/lib/amd64/server" | sudo tee --append /etc/ld.so.conf.d/jvm.conf
+chmod 777 /home/vagrant/geowave-jace/build/libgeowave.so
+sudo ln -s /home/vagrant/geowave-jace/build/libgeowave.so /usr/lib/libgeowave.so
+echo "/usr/lib/jvm/java-8-oracle/jre/lib/amd64/server" | sudo tee --append /etc/ld.so.conf.d/jvm.conf
 sudo ldconfig
 
 # Install GeoWave as a service and configure to run at startup
