@@ -38,7 +38,7 @@ sudo apt-get install -y -q  git \
                            gcc-multilib \
                            g++-multilib \
                            libglew-dev \
-                           oracle-java7-installer \
+                           oracle-java8-installer \
                            maven
 
 
