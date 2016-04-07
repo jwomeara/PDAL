@@ -9,8 +9,8 @@ export NUMTHREADS
 
 # Installs GeoWave library
 # TODO: update this
-wget http://s3.amazonaws.com/geowave-rpms/release/TARBALL/geowave-0.9.1-???-jace-source.tar.gz
-tar -xzf geowave-*-jace-source.tar.gz
+wget http://s3.amazonaws.com/geowave-rpms/dev/TARBALL/geowave-0.9.1-SNAPSHOT-ccd2521-jace.tar.gz
+tar -xzf geowave-*-jace.tar.gz
 cd geowave-jace
 mkdir build
 cd build
